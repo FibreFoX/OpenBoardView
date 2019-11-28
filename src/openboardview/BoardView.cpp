@@ -20,6 +20,7 @@
 
 #include "BRDBoard.h"
 #include "Board.h"
+//#include "BV-meta.h"
 #include "FileFormats/ASCFile.h"
 #include "FileFormats/BDVFile.h"
 #include "FileFormats/BRD2File.h"
@@ -28,7 +29,7 @@
 #include "FileFormats/CADFile.h"
 #include "FileFormats/CSTFile.h"
 #include "FileFormats/FZFile.h"
-#include "annotations.h"
+#include "boarddb.h"
 #include "imgui/imgui.h"
 
 #include "NetList.h"
@@ -57,7 +58,7 @@ BoardView::~BoardView() {
 		m_board->OutlinePoints().clear();
 		delete m_file;
 		delete m_board;
-		m_annotations.Close();
+		m_boarddb.Close();
 		m_validBoard = false;
 	}
 }
@@ -301,6 +302,10 @@ int BoardView::ConfigParse(void) {
 
 	panModifier = obvconfig.ParseInt("panModifier", 5);
 
+	/* OpenBoardData */
+	obdata_filename = obvconfig.ParseStr("OBDataFile", "");
+
+	/* Annotations / BoardDB */
 	annotationBoxSize = obvconfig.ParseInt("annotationBoxSize", 15);
 	annotationBoxSize = DPI(annotationBoxSize);
 
@@ -407,7 +412,7 @@ int BoardView::LoadFile(const std::string &filename) {
 			}
 			m_pinHighlighted.clear();
 			m_partHighlighted.clear();
-			m_annotations.Close();
+			m_boarddb.Close();
 			m_board->Nets().clear();
 			m_board->Pins().clear();
 			m_board->Components().clear();
@@ -447,8 +452,8 @@ int BoardView::LoadFile(const std::string &filename) {
 				m_current_side           = 0;
 				EPCCheck(); // check to see we don't have a flipped board outline
 
-				m_annotations.SetFilename(filename);
-				m_annotations.Load();
+				m_boarddb.SetFilename(filename);
+				m_boarddb.Load();
 
 				/*
 				 * Set pins to a known lower size, they get resized
@@ -462,6 +467,33 @@ int BoardView::LoadFile(const std::string &filename) {
 				CenterView();
 				m_lastFileOpenWasInvalid = false;
 				m_validBoard             = true;
+
+								/*
+				 * Load the meta data / measurements
+				 *
+				 */
+				obdata_boardname.clear();
+				obdata_boardname = m_boarddb.NVGetStr("obdataBoardname");
+				obdata_filename = obvconfig.ParseStr("OBDataFile","");
+				if ((!obdata_boardname.empty() && (obdata_boardname.size() > 1))) {
+					bvmeta.load(obdata_filename,obdata_boardname);
+					bvmeta.infix = obvconfig.ParseBool("obDataInfix", false);
+
+					for ( auto &n: m_board->Nets() ) {
+						for (auto m: bvmeta.data) {
+							if (n->name == m.netname) {
+								fprintf(stdout,"%s:%d: HIT on %s==%s\n", FL, n->name.c_str(), m.netname.c_str());
+								n->values.state = NET_VALUES_STATE_PRESENT;
+								n->values.v = m.volts;
+								n->values.d = m.diode;
+								n->values.r = m.resistance;
+								n->values.note = m.note;
+							//	break;
+							}
+						}
+					}
+				}
+
 
 			} else {
 				m_validBoard = false;
@@ -824,6 +856,37 @@ void BoardView::Preferences(void) {
 		}
 		ImGui::Separator();
 
+				if (ImGui::CollapsingHeader("Open Board Data")) {
+					ImGui::Text("Data file:");
+					ImGui::SameLine();
+					ImGui::Text("%s",obdata_filename.c_str());
+					ImGui::SameLine();
+					if(ImGui::Button("Select##OBDataFile")) {
+						string filename = show_file_picker();
+						/*
+						io.IniFilename = NULL;
+						io.MouseDown[0]       = false;
+						io.MouseClicked[0]    = false;
+						io.MouseClickedPos[0] = ImVec2(0, 0);
+						*/
+						if (filename.size() > 0) {
+							obvconfig.WriteStr("OBDataFile", filename.c_str());
+							obdata_filename = filename;
+						}
+					}
+
+					bool b = obvconfig.ParseBool("obDataInfix",false);
+					if (ImGui::Checkbox("Use Infix notation", &b)) {
+						obvconfig.WriteBool("obDataInfix", b);
+						bvmeta.infix = b;
+					}
+
+
+				}
+
+		ImGui::Separator();
+
+
 		if (ImGui::Checkbox("Pin select masks", &pinSelectMasks)) {
 			obvconfig.WriteBool("pinSelectMasks", pinSelectMasks);
 		}
@@ -921,6 +984,64 @@ void BoardView::Preferences(void) {
 	}
 	//	ImGui::PopStyleColor();
 }
+
+
+
+void BoardView::BoardPreferences(void) {
+	/*
+	 * This is a per-board preferences page.
+	 *
+	 * Values here are stored in the sqlite3
+	 * database that's associated with each
+	 * board loaded
+	 */
+
+	bool dummy = true;
+
+	ImGui::SetNextWindowPos(ImVec2(DPI(50),DPI(50)));
+	if (ImGui::BeginPopupModal("Board Preferences", &dummy, ImGuiWindowFlags_AlwaysAutoResize)) {
+		NVPair pdf;
+		char s[2048];
+
+		m_tooltips_enabled     = false;
+		if (m_showBoardPreferences) {
+			m_showBoardPreferences = false;
+			m_board_preferences_was_open = true;
+		}
+
+		ImGui::Dummy(ImVec2(1,DPI(10)));
+		RA("Board File :", DPI(250));
+		ImGui::SameLine();
+		ImGui::Text("%s",m_current_filename.c_str());
+
+		RA("OBData Boardname", DPI(250)); ImGui::SameLine();
+		snprintf(s,sizeof(s),"%s", obdata_boardname.c_str());
+		if (ImGui::InputText("##OBDataName", s, sizeof(s))) { 
+			m_boarddb.NVSet("obdataBoardname", s );
+		}
+
+		ImGui::Separator();
+
+		if (ImGui::Button("Done") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
+			m_tooltips_enabled = true;
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::EndPopup();
+	} else {
+		if (m_board_preferences_was_open) {
+			m_board_preferences_was_open = false;
+			m_tooltips_enabled = true;
+		}
+	}
+
+	if (!dummy) {
+		m_tooltips_enabled = true;
+	}
+}
+
+
+
 
 void BoardView::HelpAbout(void) {
 	bool dummy = true;
@@ -1157,6 +1278,24 @@ void BoardView::ShowInfoPane(void) {
 		ImGui::Text("No board currently loaded.");
 	}
 
+	/* OpenBoardData */
+	if (m_pinSelected && m_pinSelected->net->values.state & NET_VALUES_STATE_PRESENT) {
+		auto val = m_pinSelected->net->values;
+		char db[20], vb[20], rb[20];
+		ImGui::Dummy(ImVec2(1,DPI(10)));
+		ImGui::Indent();
+		ImGui::TextWrapped("Net: %s\nDiode: %s Volts: %s Res: %s\n\n%s"
+				, m_pinSelected->net->name.c_str()
+				, bvmeta.voltage2str( db, sizeof(db), val.d )
+				, bvmeta.voltage2str( vb, sizeof(vb), val.v )
+				, bvmeta.resistance2str( rb, sizeof(rb), val.r )
+				, m_pinSelected->net->values.note.c_str()
+				);
+		ImGui::Unindent();
+		ImGui::Dummy(ImVec2(1,DPI(10)));
+	}
+
+
 	if (m_partHighlighted.size()) {
 		ImGui::Separator();
 		ImGui::TextUnformatted((std::to_string(m_partHighlighted.size()) + " parts selected").c_str());
@@ -1302,7 +1441,7 @@ void BoardView::ContextMenu(void) {
 			m_showContextMenu  = false;
 			m_tooltips_enabled = false;
 			//			m_parent_occluded = true;
-			for (auto &ann : m_annotations.annotations) ann.hovered = false;
+			for (auto &ann : m_boarddb.annotations) ann.hovered = false;
 		}
 
 		/*
@@ -1388,7 +1527,7 @@ void BoardView::ContextMenu(void) {
 				 */
 				if (m_annotation_clicked_id >= 0) {
 					if (m_annotationedit_retain || (m_annotation_clicked_id >= 0)) {
-						Annotation ann = m_annotations.annotations[m_annotation_clicked_id];
+						Annotation ann = m_boarddb.annotations[m_annotation_clicked_id];
 						if (!m_annotationedit_retain) {
 							snprintf(contextbuf, sizeof(contextbuf), "%s", ann.note.c_str());
 							m_annotationedit_retain = true;
@@ -1414,8 +1553,9 @@ void BoardView::ContextMenu(void) {
 
 						if (ImGui::Button("Update##1") || (ImGui::IsKeyPressed(SDLK_RETURN) && io.KeyShift)) {
 							m_annotationedit_retain = false;
-							m_annotations.Update(m_annotations.annotations[m_annotation_clicked_id].id, contextbuf);
-							m_annotations.GenerateList();
+							//m_boarddb.AnnotationUpdate(m_boarddb.annotations[m_annotation_clicked_id].id, contextbuf);
+							m_boarddb.AnnotationUpdate(annotation);
+							m_boarddb.AnnotationGenerateList();
 							m_needsRedraw      = true;
 							m_tooltips_enabled = true;
 							// m_parent_occluded = false;
@@ -1477,8 +1617,8 @@ void BoardView::ContextMenu(void) {
 						m_annotationnew_retain = false;
 						if (debug) fprintf(stderr, "DATA:'%s'\n\n", contextbufnew);
 
-						m_annotations.Add(m_current_side, tx, ty, net.c_str(), partn.c_str(), pin.c_str(), contextbufnew);
-						m_annotations.GenerateList();
+						m_boarddb.AnnotationAdd( annotation ); //m_current_side, tx, ty, net.c_str(), partn.c_str(), pin.c_str(), contextbufnew);
+						m_boarddb.AnnotationGenerateList();
 						m_needsRedraw = true;
 
 						ImGui::CloseCurrentPopup();
@@ -1496,8 +1636,9 @@ void BoardView::ContextMenu(void) {
 				}
 
 				if ((m_annotation_clicked_id >= 0) && (ImGui::Button("Remove"))) {
-					m_annotations.Remove(m_annotations.annotations[m_annotation_clicked_id].id);
-					m_annotations.GenerateList();
+
+					m_boarddb.AnnotationRemove( annotation_selected ); //m_boarddb.annotations[m_annotation_clicked_id].id);
+					m_boarddb.AnnotationGenerateList();
 					m_needsRedraw = true;
 					// m_parent_occluded = false;
 					ImGui::CloseCurrentPopup();
@@ -1781,6 +1922,7 @@ void BoardView::Update() {
 		HelpControls();
 		HelpAbout();
 		ColorPreferences();
+		BoardPreferences();
 		Preferences();
 		ContextMenu();
 
@@ -1897,6 +2039,34 @@ void BoardView::Update() {
 			ImGui::EndMenu();
 		}
 
+		if (m_board) {
+			if (ImGui::BeginMenu("Board##1")) {
+				m_board_menu_was_open = true;
+				m_tooltips_enabled = false;
+				if (ImGui::MenuItem("Preferences")) {
+					m_showBoardPreferences = true;
+				} // Preferences item
+
+				ImGui::Dummy(ImVec2(1,DPI(20)));
+				ImGui::Text("Board Statistics");
+				ImGui::Separator();
+				ImGui::Text("Pins: %ld", m_board->Pins().size());
+				ImGui::Text("Parts: %ld", m_board->Components().size());
+				ImGui::Text("Nets: %ld", m_board->Nets().size());
+				ImGui::Text("Size: %0.2f x %0.2f\"", m_boardWidth / 1000.0f, m_boardHeight / 1000.0f);
+
+
+				
+				ImGui::EndMenu();
+			} else {
+				if (m_board_menu_was_open) {
+					m_tooltips_enabled = true;
+					m_board_menu_was_open = false;
+				}
+			} // begin menu
+		} // board menu
+
+
 		if (ImGui::BeginMenu("Help##1")) {
 			if (ImGui::MenuItem("Controls")) {
 				m_showHelpControls = true;
@@ -2005,6 +2175,12 @@ void BoardView::Update() {
 			ImGui::OpenPopup("Colour Preferences");
 		}
 
+		if (m_showBoardPreferences) {
+			m_board_preferences_was_open = true;
+			ImGui::OpenPopup("Board Preferences");
+		}
+
+
 		if (m_showPreferences) {
 			ImGui::OpenPopup("Preferences");
 		}
@@ -2055,7 +2231,9 @@ void BoardView::Update() {
 		}
 
 		if (!filename.empty()) {
+			m_current_filename.clear();
 			LoadFile(filename);
+			if (m_board) m_current_filename = filename;
 		}
 	}
 
@@ -3776,10 +3954,26 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 			ImGui::PushStyleColor(ImGuiCol_PopupBg, ImColor(m_colors.annotationPopupBackgroundColor));
 			ImGui::BeginTooltip();
 			if (currentlyHoveredPin) {
-				ImGui::Text("%s\n[%s]%s",
+				ImGui::Text("%s%s%s%s%s",
 				            currentlyHoveredPart->name.c_str(),
-				            (currentlyHoveredPin ? currentlyHoveredPin->number.c_str() : " "),
-				            (currentlyHoveredPin ? currentlyHoveredPin->net->name.c_str() : " "));
+				            (currentlyHoveredPin ? ":" : ""),
+				            (currentlyHoveredPin ? currentlyHoveredPin->number.c_str() : ""),
+				            (currentlyHoveredPin ? " => " : ""),
+				            (currentlyHoveredPin ? currentlyHoveredPin->net->name.c_str() : "")
+								);
+
+				/* OpenBoardData */
+				if (currentlyHoveredPin->net->values.state & NET_VALUES_STATE_PRESENT) {
+					auto val = currentlyHoveredPin->net->values;
+					char db[20], vb[20], rb[20];
+					ImGui::TextWrapped("\n%s /  %s  / %s\n%s"
+							, bvmeta.voltage2str( db, sizeof(db), val.d )
+							, bvmeta.voltage2str( vb, sizeof(vb), val.v )
+							, bvmeta.resistance2str( rb, sizeof(rb), val.r )
+							, currentlyHoveredPin->net->values.note.c_str()
+							);
+				}
+
 			} else {
 				ImGui::Text("%s", currentlyHoveredPart->name.c_str());
 			}
@@ -3814,7 +4008,7 @@ inline void BoardView::DrawAnnotations(ImDrawList *draw) {
 
 	draw->ChannelsSetCurrent(kChannelAnnotations);
 
-	for (auto &ann : m_annotations.annotations) {
+	for (auto &ann : m_boarddb.annotations) {
 		if (ann.side == m_current_side) {
 			ImVec2 a, b, s;
 			if (debug) fprintf(stderr, "%d:%d:%f %f: %s\n", ann.id, ann.side, ann.x, ann.y, ann.note.c_str());
@@ -3914,7 +4108,7 @@ int BoardView::AnnotationIsHovered(void) {
 	if (!m_tooltips_enabled) return false;
 	m_annotation_last_hovered = 0;
 
-	for (auto &ann : m_annotations.annotations) {
+	for (auto &ann : m_boarddb.annotations) {
 		ImVec2 a = CoordToScreen(ann.x, ann.y);
 		if ((mp.x > a.x + annotationBoxOffset) && (mp.x < a.x + (annotationBoxOffset + annotationBoxSize)) &&
 		    (mp.y < a.y - annotationBoxOffset) && (mp.y > a.y - (annotationBoxOffset + annotationBoxSize))) {
@@ -4212,7 +4406,7 @@ void BoardView::Mirror(void) {
 		}
 	}
 
-	for (auto &ann : m_annotations.annotations) {
+	for (auto &ann : m_boarddb.annotations) {
 		ann.x = max.x - ann.x;
 	}
 }

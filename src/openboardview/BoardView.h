@@ -1,12 +1,13 @@
 #pragma once
 
 #include "Board.h"
-#include "annotations.h"
+#include "boarddb.h"
 #include "confparse.h"
 #include "history.h"
 #include "imgui/imgui.h"
 #include "Searcher.h"
 #include "SpellCorrector.h"
+#include "BV-meta.h"
 #include <stdint.h>
 #include <vector>
 
@@ -98,7 +99,7 @@ struct ColorScheme {
 };
 
 // enum DrawChannel { kChannelImages = 0, kChannelFill, kChannelPolylines = 1, kChannelPins = 2, kChannelText = 3,
-// kChannelAnnotations = 4, NUM_DRAW_CHANNELS = 5 };
+// kChannelBoardDB = 4, NUM_DRAW_CHANNELS = 5 };
 enum DrawChannel {
 	kChannelImages = 0,
 	kChannelFill,
@@ -135,6 +136,26 @@ struct BoardView {
 	int annotationBoxOffset = 10;
 	int annotationBoxSize   = 10;
 
+	/*
+	 * OpenBoardData
+	 *
+	 */
+	struct BVMeta bvmeta;
+	std::string obdata_filename;
+	std::string obdata_boardname;
+	std::string m_current_filename;
+	bool m_board_menu_was_open = false;
+	bool m_showBoardPreferences = false;
+	bool m_board_preferences_was_open = false;
+
+
+	Annotation annotation;
+	int annotation_list_hovered_idx = -1;
+	int annotation_board_hovered_idx = -1;
+	int annotation_first_launch = 0;
+	int annotation_show_note_idx = -1;
+	int annotation_selected = -1;
+
 	float pinSizeThresholdLow = 0.0f;
 	bool pinShapeSquare       = false;
 	bool pinShapeCircle       = true;
@@ -144,7 +165,7 @@ struct BoardView {
 	bool showNetWeb           = true;
 	bool showInfoPanel        = true;
 	bool showPins             = true;
-	bool showAnnotations      = true;
+	bool showAnnotations			= true;
 	bool pinHalo              = false;
 	float pinHaloDiameter     = 1.1;
 	float pinHaloThickness    = 4.00;
@@ -173,6 +194,7 @@ struct BoardView {
 	template<class T> void ShowSearchResults(std::vector<T> results, char *search, int &limit, void (BoardView::*onSelect)(const char *));
 	void SearchColumnGenerate(const std::string& title, std::pair<SharedVector<Component>, SharedVector<Net>> results, char *search, int limit);
 	void Preferences(void);
+	void BoardPreferences(void);
 	void SaveAllColors(void);
 	void ColorPreferencesItem(
 	    const char *label, int label_width, const char *butlabel, const char *conflabel, int var_width, uint32_t *c);
@@ -190,7 +212,7 @@ struct BoardView {
 	void OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thickness);
 
 	/* Context menu, sql stuff */
-	Annotations m_annotations;
+	BoardDB m_boarddb;
 	void ContextMenu(void);
 	int AnnotationIsHovered(void);
 	bool AnnotationWasHovered     = false;

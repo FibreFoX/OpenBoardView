@@ -96,11 +96,22 @@ struct Point {
 	    , y(float(_y)){};
 };
 
+#define NET_VALUES_STATE_NONE 0
+#define NET_VALUES_STATE_PRESENT 1
+struct values_s{
+	uint8_t state = NET_VALUES_STATE_NONE; // 0 = default / working, we might add othrs later
+	double v = 0.0; // volts
+	double r = 0.0; // resistance
+	double d = 0.0; // diode mode
+	string note = ""; 
+};
+
 // Shared potential between multiple Pins/Contacts.
 struct Net : BoardElement {
 	int number;
 	string name;
 	bool is_ground;
+	struct values_s values;
 
 	SharedVector<Pin> pins;
 
