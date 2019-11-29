@@ -482,7 +482,7 @@ int BoardView::LoadFile(const std::string &filename) {
 					for ( auto &n: m_board->Nets() ) {
 						for (auto m: bvmeta.data) {
 							if (n->name == m.netname) {
-								fprintf(stdout,"%s:%d: HIT on %s==%s\n", FL, n->name.c_str(), m.netname.c_str());
+								//fprintf(stdout,"%s:%d: HIT on %s==%s\n", FL, n->name.c_str(), m.netname.c_str());
 								n->values.state = NET_VALUES_STATE_PRESENT;
 								n->values.v = m.volts;
 								n->values.d = m.diode;
@@ -1199,7 +1199,9 @@ void BoardView::HelpControls(void) {
 void BoardView::ShowInfoPane(void) {
 	ImGuiIO &io = ImGui::GetIO();
 	ImVec2 ds   = io.DisplaySize;
+	ImVec2 ref_text_size = ImGui::CalcTextSize("000.00");
 
+				
 	if (!showInfoPanel) return;
 
 	if (m_info_surface.x < DPIF(100)) {
@@ -1373,6 +1375,17 @@ void BoardView::ShowInfoPane(void) {
 			for (auto pin : part->pins) {
 				char ss[1024];
 				snprintf(ss, sizeof(ss), "%4s  %s", pin->number.c_str(), pin->net->name.c_str());
+
+				if (pin->net->values.state & NET_VALUES_STATE_PRESENT) {
+							auto cw = m_info_surface.x -(4 *ref_text_size.x);
+							
+							ImGui::Columns(4);
+							ImGui::SetColumnWidth(-1, cw);
+
+						} else { 
+							ImGui::Columns(1);
+				}
+
 				if (ImGui::Selectable(ss, (pin == m_pinSelected))) {
 					ClearAllHighlights();
 
@@ -1390,10 +1403,36 @@ void BoardView::ShowInfoPane(void) {
 					}
 					m_needsRedraw = true;
 				}
+
+				if (pin->net->values.state & NET_VALUES_STATE_PRESENT) {
+									/* 
+									 *
+									 * NETVALUES
+									 * NETVALUES
+									 * NETVALUES
+									 *
+									 * Values have already been loaded/converted to strings in the meta2string
+									 * conversion about 300 lines back
+									 *
+									 */
+									bvmeta.meta2string(bvmeta_s{ "",pin->net->values.d, pin->net->values.v, pin->net->values.r,"" });
+									ImGui::NextColumn(); ImGui::SetColumnWidth(-1,ref_text_size.x);
+									ImGui::Text("%s", bvmeta.ds);
+
+									ImGui::NextColumn(); ImGui::SetColumnWidth(-1,ref_text_size.x); 
+									ImGui::Text("%s", bvmeta.vs);
+
+									ImGui::NextColumn(); ImGui::SetColumnWidth(-1,ref_text_size.x); 
+									ImGui::Text("%s", bvmeta.rs);
+
+				}
+
+
 				ImGui::PushStyleColor(ImGuiCol_Border, ImColor(0xffeeeeee));
 				ImGui::Separator();
 				ImGui::PopStyleColor();
 			}
+
 			ImGui::ListBoxFooter();
 			ImGui::PopItemWidth();
 
@@ -2458,7 +2497,7 @@ void BoardView::HandleInput() {
 
 					// threshold to within a pin's diameter of the pin center
 					// float min_dist = m_pinDiameter * 1.0f;
-					float min_dist = m_pinDiameter / 2.0f;
+					float min_dist = m_pinDiameter;// / 2.0f;
 					min_dist *= min_dist; // all distance squared
 					std::shared_ptr<Pin> selection = nullptr;
 					for (auto &pin : m_board->Pins()) {
