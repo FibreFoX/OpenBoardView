@@ -1515,13 +1515,12 @@ void BoardView::ContextMenu(void) {
 			 * we're going to go through all the possible items we can annotate at this position and offer them
 			 */
 
-			float min_dist = m_pinDiameter * 1.0f;
+			float min_dist = DBL_MAX;// (m_pinDiameter * m_pinDiameter) *2;// 1.0f;
 
 			/*
 			 * find the closest pin, starting at no more than
 			 * 1 radius away
 			 */
-			min_dist *= min_dist; // all distance squared
 			Pin *selection = nullptr;
 			for (auto &pin : m_board->Pins()) {
 				if (ComponentIsVisible(pin->component)) {
@@ -2519,8 +2518,7 @@ void BoardView::HandleInput() {
 
 					// threshold to within a pin's diameter of the pin center
 					// float min_dist = m_pinDiameter * 1.0f;
-					float min_dist = m_pinDiameter *m_scale;// / 2.0f;
-					min_dist *= min_dist; // all distance squared
+					float min_dist = DBL_MAX; //m_pinDiameter /m_scale;// / 2.0f;
 					std::shared_ptr<Pin> selection = nullptr;
 					for (auto &pin : m_board->Pins()) {
 						if (ComponentIsVisible(pin->component)) {
@@ -3987,8 +3985,7 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 				draw->AddQuad(a, b, c, d, m_colors.partHighlightedColor, 2);
 			}
 
-			float min_dist = m_pinDiameter / 2.0f;
-			min_dist *= min_dist; // all distance squared
+			float min_dist = DBL_MAX; //m_pinDiameter / 2.0f;
 			currentlyHoveredPin = nullptr;
 
 			for (auto &pin : currentlyHoveredPart->pins) {
@@ -3998,7 +3995,6 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 				float dist = dx * dx + dy * dy;
 				if ((dist < (pin->diameter * pin->diameter)) && (dist < min_dist)) {
 					currentlyHoveredPin = pin;
-					//					fprintf(stderr,"Pinhit: %s\n",pin->number.c_str());
 					min_dist = dist;
 				} // if in the required diameter
 			}     // for each pin in the part
