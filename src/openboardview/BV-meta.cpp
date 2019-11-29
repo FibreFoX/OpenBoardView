@@ -310,10 +310,10 @@ void BVMeta::load( std::string filename, std::string boardcode ) {
 			snprintf(ap, sizeof(ap), "%s", a.note.c_str());
 
 			if (strncmp(ap,"===",3)==0) {
-				fprintf(stdout,"%s:%d: %s is aliased to %s\n", FL, ap, a.note.c_str());
+//				fprintf(stdout,"%s:%d: %s is aliased to %s\n", FL, ap, a.note.c_str());
 				for (auto b: data) {
 					if (strcmp(ap+3, b.netname.c_str())==0) {
-						fprintf(stdout,"%s:%d: Alias hit %s === %s\n", FL, ap, b.netname.c_str());
+						//fprintf(stdout,"%s:%d: Alias hit %s === %s\n", FL, ap, b.netname.c_str());
 						a.diode = b.diode;
 						a.volts = b.volts;
 						a.resistance = b.resistance;

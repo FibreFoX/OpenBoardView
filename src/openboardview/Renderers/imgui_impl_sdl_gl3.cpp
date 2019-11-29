@@ -21,7 +21,7 @@
 #include <glad/glad.h>
 
 // Data
-static double g_Time          = 0.0f;
+static Uint64 g_Time          = 0.0f;
 static bool g_MousePressed[3] = {false, false, false};
 static float g_MouseWheel     = 0.0f;
 static GLuint g_FontTexture   = 0;
@@ -335,6 +335,7 @@ void ImGui_ImplSdlGL3_InvalidateDeviceObjects() {
 }
 
 bool ImGui_ImplSdlGL3_Init(SDL_Window *window) {
+	ImGui::CreateContext();
 	ImGuiIO &io                   = ImGui::GetIO();
 	io.KeyMap[ImGuiKey_Tab]       = SDLK_TAB; // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
 	io.KeyMap[ImGuiKey_LeftArrow] = SDL_SCANCODE_LEFT;
@@ -382,6 +383,7 @@ void ImGui_ImplSdlGL3_Shutdown() {
 void ImGui_ImplSdlGL3_NewFrame(SDL_Window *window) {
 	if (!g_FontTexture) ImGui_ImplSdlGL3_CreateDeviceObjects();
 
+	ImGui::CreateContext();
 	ImGuiIO &io = ImGui::GetIO();
 
 	// Setup display size (every frame to accommodate for window resizing)
@@ -392,11 +394,11 @@ void ImGui_ImplSdlGL3_NewFrame(SDL_Window *window) {
 	io.DisplaySize             = ImVec2((float)w, (float)h);
 	io.DisplayFramebufferScale = ImVec2(w > 0 ? ((float)display_w / w) : 0, h > 0 ? ((float)display_h / h) : 0);
 
-	// Setup time step
-	Uint32 time         = SDL_GetTicks();
-	double current_time = time / 1000.0;
-	io.DeltaTime        = g_Time > 0.0 ? (float)(current_time - g_Time) : (float)(1.0f / 60.0f);
-	g_Time              = current_time;
+	  // Setup time step (we don't use SDL_GetTicks() because it is using millisecond resolution)
+    static Uint64 frequency = SDL_GetPerformanceFrequency();
+    Uint64 current_time = SDL_GetPerformanceCounter();
+    io.DeltaTime = g_Time > 0 ? (float)((double)(current_time - g_Time) / frequency) : (float)(1.0f / 60.0f);
+    g_Time = current_time;
 
 	// Setup inputs
 	// (we already got mouse wheel, keyboard keys & characters from SDL_PollEvent())
