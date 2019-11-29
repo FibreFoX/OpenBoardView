@@ -1395,7 +1395,6 @@ void BoardView::ShowInfoPane(void) {
 			ImGui::ListBoxHeader(str.c_str(), listSize); //, ImVec2(m_board_surface.x/3 -5, m_board_surface.y/2));
 			for (auto pin : part->pins) {
 				char ss[1024];
-				snprintf(ss, sizeof(ss), "%4s  %s", pin->number.c_str(), pin->net->name.c_str());
 
 				if (pin->net->values.state & NET_VALUES_STATE_PRESENT) {
 							auto cw = m_info_surface.x -(4 *ref_text_size.x);
@@ -1406,6 +1405,8 @@ void BoardView::ShowInfoPane(void) {
 						} else { 
 							ImGui::Columns(1);
 				}
+
+				snprintf(ss, sizeof(ss), "%4s  %s", pin->number.c_str(), pin->net->name.c_str());
 
 				if (ImGui::Selectable(ss, (pin == m_pinSelected))) {
 					ClearAllHighlights();
@@ -1452,6 +1453,7 @@ void BoardView::ShowInfoPane(void) {
 				ImGui::PushStyleColor(ImGuiCol_Border, ImU32(0xffeeeeee));
 				ImGui::Separator();
 				ImGui::PopStyleColor();
+				ImGui::Columns(1);
 			}
 
 			ImGui::ListBoxFooter();
@@ -2517,7 +2519,7 @@ void BoardView::HandleInput() {
 
 					// threshold to within a pin's diameter of the pin center
 					// float min_dist = m_pinDiameter * 1.0f;
-					float min_dist = m_pinDiameter;// / 2.0f;
+					float min_dist = m_pinDiameter *m_scale;// / 2.0f;
 					min_dist *= min_dist; // all distance squared
 					std::shared_ptr<Pin> selection = nullptr;
 					for (auto &pin : m_board->Pins()) {
@@ -2525,7 +2527,7 @@ void BoardView::HandleInput() {
 							float dx   = pin->position.x - pos.x;
 							float dy   = pin->position.y - pos.y;
 							float dist = dx * dx + dy * dy;
-							if ((dist < (pin->diameter * pin->diameter)) && (dist < min_dist)) {
+							if ((dist < 2 *(pin->diameter *pin->diameter))) {
 								selection = pin;
 								min_dist  = dist;
 							}

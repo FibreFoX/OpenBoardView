@@ -21,7 +21,7 @@ double BVMeta::voltage2double( char *r, char **ep ) {
 
 	if (!r) return DBL_MAX;
 	if (*r == '\0') return DBL_MAX;
-	fprintf(stdout, "%s:%d: Decoding '%s'\n",FL, r);
+	//fprintf(stdout, "%s:%d: Decoding '%s'\n",FL, r);
 	multiplier_pos = strpbrk(p,"vV");
 	if (multiplier_pos) {
 		*multiplier_pos = '.';
@@ -39,10 +39,10 @@ double BVMeta::resistance2double( char *r, char **ep ) {
 
 	if (!r) return DBL_MAX;
 	if (*r == '\0') return DBL_MAX;
-	fprintf(stdout, "%s:%d: Decoding '%s'\n",FL, r);
+//	fprintf(stdout, "%s:%d: Decoding '%s'\n",FL, r);
 	multiplier_pos = strpbrk(p,"rRkKmM");
 	if (multiplier_pos) {
-		fprintf(stdout,"%s:%d: Multiplier char is %c\n", FL, *multiplier_pos);
+		//fprintf(stdout,"%s:%d: Multiplier char is %c\n", FL, *multiplier_pos);
 		switch (*multiplier_pos) {
 			case 'r':
 			case 'R': multiplier = 1.0;
@@ -55,10 +55,10 @@ double BVMeta::resistance2double( char *r, char **ep ) {
 						 break;
 
 			default:
-						 fprintf(stdout,"%s:%d: Unknown multiplier char in '%s'\n", FL, r);
+//						 fprintf(stdout,"%s:%d: Unknown multiplier char in '%s'\n", FL, r);
 						 break;
 		}
-		fprintf(stdout,"%s:%d: Multiplier set to %0.1f\n", FL, multiplier);
+//		fprintf(stdout,"%s:%d: Multiplier set to %0.1f\n", FL, multiplier);
 
 		if (strchr(r,'.')) {
 			//
@@ -247,7 +247,7 @@ void BVMeta::load( std::string filename, std::string boardcode ) {
 							 */
 							b.note = p;
 							data.push_back(b); // we don't fill in data until the end.
-							fprintf(stdout, "%s:%d: %s is aliased to %s\n", FL, b.netname.c_str(), b.note.c_str());
+							//fprintf(stdout, "%s:%d: %s is aliased to %s\n", FL, b.netname.c_str(), b.note.c_str());
 							continue;
 						}
 
