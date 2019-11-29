@@ -9,7 +9,7 @@ execute_process(
 	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 )
 add_definitions("-DImDrawIdx=unsigned int") # short is not enough for us
-add_library(imgui STATIC imgui/imgui.cpp imgui/imgui_draw.cpp)
+add_library(imgui STATIC imgui/imgui.cpp imgui/imgui_draw.cpp imgui/imgui_widgets.cpp)
 #install(TARGETS imgui DESTINATION ${INSTALL_ARCHIVE_DIR}) # No need to install a static lib
 
 ## utf8.h ##
