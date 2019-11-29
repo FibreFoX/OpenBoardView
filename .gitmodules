@@ -8,7 +8,3 @@
 [submodule "src/glad"]
 	path = src/glad
 	url = https://github.com/Dav1dde/glad.git
-[submodule "src/imgui"]
-	path = src/imgui
-	url = https://github.com/OpenBoardView/imgui
-	branch = master
