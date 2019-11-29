@@ -1392,7 +1392,10 @@ void BoardView::ShowInfoPane(void) {
 			int pc          = part->pins.size();
 			if (pc > 20) pc = 20;
 			listSize        = ImVec2(m_info_surface.x - DPIF(50), pc * ImGui::GetFontSize() * 1.45);
-			ImGui::ListBoxHeader(str.c_str(), listSize); //, ImVec2(m_board_surface.x/3 -5, m_board_surface.y/2));
+			if (!ImGui::ListBoxHeader(str.c_str(), listSize)) {
+				continue;
+			}
+
 			for (auto pin : part->pins) {
 				char ss[1024];
 
@@ -1402,7 +1405,7 @@ void BoardView::ShowInfoPane(void) {
 							ImGui::Columns(4);
 							ImGui::SetColumnWidth(-1, cw);
 
-						} else { 
+				} else { 
 							ImGui::Columns(1);
 				}
 
@@ -1423,7 +1426,7 @@ void BoardView::ShowInfoPane(void) {
 						m_partHighlighted.push_back(pin->component);
 						CenterZoomNet(pin->net->name);
 					}
-					m_needsRedraw = true;
+//					m_needsRedraw = true;
 				}
 
 				if (pin->net->values.state & NET_VALUES_STATE_PRESENT) {
@@ -1617,7 +1620,7 @@ void BoardView::ContextMenu(void) {
 							//m_boarddb.AnnotationUpdate(m_boarddb.annotations[m_annotation_clicked_id].id, contextbuf);
 							m_boarddb.AnnotationUpdate(annotation);
 							m_boarddb.AnnotationGenerateList();
-							m_needsRedraw      = true;
+//							m_needsRedraw      = true;
 							m_tooltips_enabled = true;
 							// m_parent_occluded = false;
 							ImGui::CloseCurrentPopup();
@@ -1680,7 +1683,7 @@ void BoardView::ContextMenu(void) {
 
 						m_boarddb.AnnotationAdd( annotation ); //m_current_side, tx, ty, net.c_str(), partn.c_str(), pin.c_str(), contextbufnew);
 						m_boarddb.AnnotationGenerateList();
-						m_needsRedraw = true;
+//						m_needsRedraw = true;
 
 						ImGui::CloseCurrentPopup();
 					}
@@ -1700,7 +1703,7 @@ void BoardView::ContextMenu(void) {
 
 					m_boarddb.AnnotationRemove( annotation_selected ); //m_boarddb.annotations[m_annotation_clicked_id].id);
 					m_boarddb.AnnotationGenerateList();
-					m_needsRedraw = true;
+//					m_needsRedraw = true;
 					// m_parent_occluded = false;
 					ImGui::CloseCurrentPopup();
 				}
