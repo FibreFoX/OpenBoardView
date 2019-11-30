@@ -10,11 +10,12 @@ matrix:
     compiler: gcc
     env: VERS=linux DEPLOY=yes
   - os: osx
+    osx_image: xcode9.4
     compiler: clang
     env: VERS=macos DEPLOY=yes
   - os: linux 
     compiler: gcc
-    env: VERS=win DEPLOY=yes
+    env: VERS=win CROSS=mingw64 DEPLOY=yes
 dist: trusty
 sudo: required
 language: cpp
@@ -43,6 +44,9 @@ install: |-
   then
     brew update
     brew install sdl2
+  else
+    echo "NO DISTRO MATCH. EXITING"
+    exit 1
   fi
 script: |-
   if [ "$CXX" = "g++" ]; then export CXX="g++-6" CC="gcc-6"; fi
@@ -63,9 +67,11 @@ before_deploy: |-
     export DEPLOY_PKG=$(ls OpenBoardView-*.dmg)
   elif [ "$VERS" == "win" ]
   then
+    ./package.sh "$VERS"
     export DEPLOY_PKG=$(ls OBV*win.zip)
   elif [ "$VERS" == "linux" ]
   then
+    ./package.sh "$VERS"
     export DEPLOY_PKG=$(ls OpenBoardView-*.tgz)
   fi
 deploy:
