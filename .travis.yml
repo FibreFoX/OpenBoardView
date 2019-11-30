@@ -8,16 +8,13 @@ matrix:
   include:
   - os: linux
     compiler: gcc
-    env: DEPLOY=yes DEPLOY_DEB=yes
-  - os: linux
-    compiler: gcc
-    env: DEPLOY=yes DEPLOY_RPM=yes
+    env: VERS=linux DEPLOY=yes
   - os: osx
     compiler: clang
-    env: DEPLOY=yes
-  - os: linux
+    env: VERS=macos DEPLOY=yes
+  - os: linux 
     compiler: gcc
-    env: CROSS=mingw64 DEPLOY=yes
+    env: VERS=win DEPLOY=yes
 dist: trusty
 sudo: required
 language: cpp
@@ -29,22 +26,20 @@ addons:
     - gcc-6
     - g++-6
 install: |-
-  if [ "$TRAVIS_OS_NAME" == "linux" ]
+  if [ "$VERS" == "win" ] # Cross compiling for Windows
   then
-    if [ "$CROSS" == "mingw64" ] # Cross compiling for Windows
-    then
-      sudo add-apt-repository "deb http://fr.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse" # We need an up-to-date MinGW
-      sudo apt-get update
-      sudo apt-get install -t xenial gcc-mingw-w64-i686 g++-mingw-w64-i686 mingw32-runtime
-      wget https://www.libsdl.org/release/SDL2-devel-2.0.4-mingw.tar.gz # Manually install the SDL2 mingw dev files
-      tar -xf SDL2-devel-2.0.4-mingw.tar.gz
-      pushd SDL2-2.0.4
-      sudo make cross CROSS_PATH=/usr
-      popd
-    else
-      sudo apt-get -qy install libsdl2-dev libgtk-3-dev rpm libegl1-mesa-dev libgles2-mesa-dev # Manual installation of the last 2 shouldn't be required, but it is now…
-    fi
-  elif [ "$TRAVIS_OS_NAME" == "osx" ]
+    sudo add-apt-repository "deb http://fr.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse" # We need an up-to-date MinGW
+    sudo apt-get update
+    sudo apt-get install -t xenial gcc-mingw-w64-i686 g++-mingw-w64-i686 mingw32-runtime
+    wget https://www.libsdl.org/release/SDL2-devel-2.0.4-mingw.tar.gz # Manually install the SDL2 mingw dev files
+    tar -xf SDL2-devel-2.0.4-mingw.tar.gz
+    pushd SDL2-2.0.4
+    sudo make cross CROSS_PATH=/usr
+    popd
+  elif [ "$VERS" == "linux" ]
+  then
+    sudo apt-get -qy install libsdl2-dev libgtk-3-dev rpm libegl1-mesa-dev libgles2-mesa-dev # Manual installation of the last 2 shouldn't be required, but it is now…
+  elif [ "$VERS" == "macos" ]
   then
     brew update
     brew install sdl2
@@ -59,25 +54,26 @@ script: |-
     popd
   fi
 before_deploy: |-
-  if [ "$TRAVIS_OS_NAME" == "osx" ]
+  export GITC=$(git rev-list HEAD --count)
+  export OBV_NAME="OBV-R$GITC"
+
+  if [ "$VERS" == "macos" ]
   then
-    export DEPLOY_FILES=$(ls OpenBoardView-*.dmg)
-  elif [ "$CROSS" == "mingw64" ]
+    ./package.sh "$VERS"
+    export DEPLOY_PKG=$(ls OpenBoardView-*.dmg)
+  elif [ "$VERS" == "win" ]
   then
-    export DEPLOY_FILES=bin/openboardview.exe
-  elif [ "$DEPLOY_DEB" == "yes" ]
+    export DEPLOY_PKG=$(ls OBV*win.zip)
+  elif [ "$VERS" == "linux" ]
   then
-    export DEPLOY_FILES=$(ls OpenBoardView-*.deb)
-  elif [ "$DEPLOY_RPM" == "yes" ]
-  then
-    export DEPLOY_FILES=$(ls OpenBoardView-*.rpm)
+    export DEPLOY_PKG=$(ls OpenBoardView-*.tgz)
   fi
 deploy:
   provider: releases
   api_key:
     secure: "kAhd94Ok2ePdYtCzkzgBF2zB9ckzlChmfCNrhtXgxJMAGdKCMg7f4l0qdTqZWjA7fjuCuQfswgfJSRtWVNHvPs9FCQc9NX2MAlQBqm7H7gbuwiyt3LGbslgsCHx24ZgMX9N399WzQ2RszAYBvzLPxgYPywU6V17uCBTbBLWI1q7dI1NUWADLb5ZU1ZegeLQyaaKMr7ecO9x829mQP5yDtkSFbQZKkX+FLeD4AaTUGIKy+qPUrHOd3W4//hX/IKG2gNvMBxZDd43MHp+HFpQ8s+WzQ3vAjkf3cZv0fvRGvhJOLcm8Be7bcco2Cc9zrr+Gei/dlqr/ELp720z+c2imbbO8CDL5LKC5sd7luezWcXT1TY3Mzgr3Mxhr4r7IJOAzOdu7tfBJsTLktZRfGG0PNq6codQYwGTXwa+CvtHTqtnXnciL75YrGH2cCauYolgzgQMOPueAJ4b1CZjvNcdyK1VsVaXNsLppECUeYqpshtrXwvDoDLjenPLO8YVd42tGoK0nVBNzASwf+gSYGBp+jawIGjAQeO+XBhgvsQQwRzZgl54kPffwWZZho6fKbHKQIN2KZqnCdSiw0+vH3sg9lEM2Y0Ai0+TYjBUoRtQL8Eywid7wlbLrkhmAkIuYObpMzE/IcJFunBi48fQaHrB+uWBr477a9XpAysd3dY+hQxo="
   file_glob: true
-  file: "${DEPLOY_FILES}"
+  file: "${DEPLOY_PKG}"
   skip_cleanup: true
   on:
     tags: true

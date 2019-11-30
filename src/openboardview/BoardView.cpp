@@ -298,7 +298,8 @@ int BoardView::ConfigParse(void) {
 	flipMode                  = obvconfig.ParseInt("flipMode", 0);
 
 	boardFill        = obvconfig.ParseBool("boardFill", true);
-	boardFillSpacing = obvconfig.ParseInt("boardFillSpacing", 3);
+	boardFillSpacing = obvconfig.ParseInt("boardFillSpacing", 1);
+	if (boardFillSpacing < 1) boardFillSpacing = 1;
 
 	zoomFactor   = obvconfig.ParseInt("zoomFactor", 10) / 10.0f;
 	zoomModifier = obvconfig.ParseInt("zoomModifier", 5);
@@ -822,6 +823,7 @@ void BoardView::Preferences(void) {
 		RA("Board fill spacing", DPI(200));
 		ImGui::SameLine();
 		if (ImGui::InputInt("##boardFillSpacing", &boardFillSpacing)) {
+			if (boardFillSpacing < 1) boardFillSpacing = 1;
 			obvconfig.WriteInt("boardFillSpacing", boardFillSpacing);
 		}
 
@@ -3011,6 +3013,8 @@ void BoardView::OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thicknes
 	                        //	double steps = 500;
 	double vdelta;
 	double y, ystart, yend;
+
+	if (ydelta < 1) ydelta = 1;
 
 	if (!boardFill) return;
 	if (!m_file) return;

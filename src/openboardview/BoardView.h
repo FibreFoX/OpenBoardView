@@ -171,7 +171,7 @@ struct BoardView {
 	float pinHaloThickness    = 4.00;
 	bool fillParts            = true;
 	bool boardFill            = true;
-	int boardFillSpacing      = 3;
+	int boardFillSpacing      = 1;
 	bool boardMinMaxDone      = false;
 
 	bool showPosition  = true;
