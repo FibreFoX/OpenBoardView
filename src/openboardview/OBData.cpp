@@ -18,16 +18,22 @@ double OBData::voltage2double( char *r, char **ep ) {
 	double result = DBL_MAX;
 	char *multiplier_pos = NULL;
 	char *p = r;
+	char *sp;
+
+	sp = strchr(p,' '); // look for a space, if you find one, delimit.
+	if (sp) *sp = '\0';
 
 	if (!r) return DBL_MAX;
 	if (*r == '\0') return DBL_MAX;
-	//fprintf(stdout, "%s:%d: Decoding '%s'\n",FL, r);
+//	fprintf(stdout, "%s:%d: Decoding '%s'\n",FL, r);
 	multiplier_pos = strpbrk(p,"vV");
 	if (multiplier_pos) {
 		*multiplier_pos = '.';
 	}
 
 	result = strtod(r, ep);
+
+	if (sp) *sp = '\0';
 	return result;
 }
 
@@ -36,13 +42,17 @@ double OBData::resistance2double( char *r, char **ep ) {
 	double result = DBL_MAX;
 	char *multiplier_pos = NULL;
 	char *p = r;
+	char *sp = r;
 
 	if (!r) return DBL_MAX;
 	if (*r == '\0') return DBL_MAX;
+	sp = strchr(p,' ');
+	if (sp) *sp = '\0';
+
 //	fprintf(stdout, "%s:%d: Decoding '%s'\n",FL, r);
 	multiplier_pos = strpbrk(p,"rRkKmM");
 	if (multiplier_pos) {
-		//fprintf(stdout,"%s:%d: Multiplier char is %c\n", FL, *multiplier_pos);
+//		fprintf(stdout,"%s:%d: Multiplier char is %c\n", FL, *multiplier_pos);
 		switch (*multiplier_pos) {
 			case 'r':
 			case 'R': multiplier = 1.0;
@@ -55,7 +65,7 @@ double OBData::resistance2double( char *r, char **ep ) {
 						 break;
 
 			default:
-//						 fprintf(stdout,"%s:%d: Unknown multiplier char in '%s'\n", FL, r);
+						 fprintf(stdout,"%s:%d: Unknown multiplier char in '%s'\n", FL, r);
 						 break;
 		}
 //		fprintf(stdout,"%s:%d: Multiplier set to %0.1f\n", FL, multiplier);
@@ -75,6 +85,7 @@ double OBData::resistance2double( char *r, char **ep ) {
 			//
 			*multiplier_pos = '.';
 			result = strtod(r, ep) *multiplier;
+			if (sp) *sp = ' ';
 			return result;
 		}
 
@@ -83,9 +94,11 @@ double OBData::resistance2double( char *r, char **ep ) {
 		// If there was no multiplier character, just do a normal strtod()
 		//
 		result = strtod(r, ep);
+			if (sp) *sp = ' ';
 		return result;
 	}
 
+			if (sp) *sp = ' ';
 	return DBL_MAX;
 }
 
@@ -247,7 +260,7 @@ void OBData::load( std::string filename, std::string boardcode ) {
 							 */
 							b.note = p;
 							data.push_back(b); // we don't fill in data until the end.
-							//fprintf(stdout, "%s:%d: %s is aliased to %s\n", FL, b.netname.c_str(), b.note.c_str());
+//							fprintf(stdout, "%s:%d: %s is aliased to %s\n", FL, b.netname.c_str(), b.note.c_str());
 							continue;
 						}
 
@@ -313,7 +326,7 @@ void OBData::load( std::string filename, std::string boardcode ) {
 //				fprintf(stdout,"%s:%d: %s is aliased to %s\n", FL, ap, a.note.c_str());
 				for (auto b: data) {
 					if (strcmp(ap+3, b.netname.c_str())==0) {
-						//fprintf(stdout,"%s:%d: Alias hit %s === %s\n", FL, ap, b.netname.c_str());
+//						fprintf(stdout,"%s:%d: Alias hit %s === %s\n", FL, ap, b.netname.c_str());
 						a.diode = b.diode;
 						a.volts = b.volts;
 						a.resistance = b.resistance;
