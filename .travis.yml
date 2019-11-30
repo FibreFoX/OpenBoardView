@@ -49,7 +49,10 @@ install: |-
     exit 1
   fi
 script: |-
-  if [ "$CXX" = "g++" ]; then export CXX="g++-6" CC="gcc-6"; fi
+  if [ "$CXX" = "g++" ]
+  then
+    export CXX="g++-6" CC="gcc-6"
+  fi
   ./build.sh || exit 1
   if [ "$DEPLOY_DEB" == "yes" ] || [ "$DEPLOY_RPM" == "yes" ]
   then
@@ -60,7 +63,6 @@ script: |-
 before_deploy: |-
   export GITC=$(git rev-list HEAD --count)
   export OBV_NAME="OBV-R$GITC"
-
   if [ "$VERS" == "macos" ]
   then
     ./package.sh "$VERS"
@@ -72,7 +74,7 @@ before_deploy: |-
   elif [ "$VERS" == "linux" ]
   then
     ./package.sh "$VERS"
-    export DEPLOY_PKG=$(ls OpenBoardView-*.tgz)
+    export DEPLOY_PKG=$(ls OBV*.tgz)
   fi
 deploy:
   provider: releases
