@@ -1,5 +1,5 @@
 
-struct bvmeta_s {
+struct obdata_s {
 	std::string netname;
 	double diode;
 	double volts;
@@ -7,14 +7,14 @@ struct bvmeta_s {
 	std::string note;
 };
 
-struct BVMeta {
-	std::vector<bvmeta_s> data;
+struct OBData {
+	std::vector<obdata_s> data;
 	bool infix = false;
 
 	char ds[20], vs[20], rs[20]; // suspect this won't be overly threadsafe
 
 	void v2s( double v, char *s, size_t bs, char *format );
-	void meta2string( struct bvmeta_s m );
+	void meta2string( struct obdata_s m );
 
 	double resistance2double( char *r, char **ep );
 	double voltage2double( char *r, char **ep );

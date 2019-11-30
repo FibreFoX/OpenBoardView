@@ -63,7 +63,7 @@ link_directories(
 
 
 set(SOURCES
-	BV-meta.cpp
+	OBData.cpp
 	boarddb.cpp
 	confparse.cpp
 	vectorhulls.cpp

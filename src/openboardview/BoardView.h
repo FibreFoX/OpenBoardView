@@ -7,7 +7,7 @@
 #include "imgui/imgui.h"
 #include "Searcher.h"
 #include "SpellCorrector.h"
-#include "BV-meta.h"
+#include "OBData.h"
 #include <stdint.h>
 #include <vector>
 
@@ -140,7 +140,7 @@ struct BoardView {
 	 * OpenBoardData
 	 *
 	 */
-	struct BVMeta bvmeta;
+	struct OBData obdata;
 	std::string obdata_filename;
 	std::string obdata_boardname;
 	std::string m_current_filename;

@@ -20,7 +20,6 @@
 
 #include "BRDBoard.h"
 #include "Board.h"
-//#include "BV-meta.h"
 #include "FileFormats/ASCFile.h"
 #include "FileFormats/BDVFile.h"
 #include "FileFormats/BRD2File.h"
@@ -483,11 +482,11 @@ int BoardView::LoadFile(const std::string &filename) {
 				obdata_boardname = m_boarddb.NVGetStr("obdataBoardname");
 				obdata_filename = obvconfig.ParseStr("OBDataFile","");
 				if ((!obdata_boardname.empty() && (obdata_boardname.size() > 1))) {
-					bvmeta.load(obdata_filename,obdata_boardname);
-					bvmeta.infix = obvconfig.ParseBool("obDataInfix", false);
+					obdata.load(obdata_filename,obdata_boardname);
+					obdata.infix = obvconfig.ParseBool("obDataInfix", false);
 
 					for ( auto &n: m_board->Nets() ) {
-						for (auto m: bvmeta.data) {
+						for (auto m: obdata.data) {
 							if (n->name == m.netname) {
 								//fprintf(stdout,"%s:%d: HIT on %s==%s\n", FL, n->name.c_str(), m.netname.c_str());
 								n->values.state = NET_VALUES_STATE_PRESENT;
@@ -901,7 +900,7 @@ void BoardView::Preferences(void) {
 					bool b = obvconfig.ParseBool("obDataInfix",false);
 					if (ImGui::Checkbox("Use Infix notation", &b)) {
 						obvconfig.WriteBool("obDataInfix", b);
-						bvmeta.infix = b;
+						obdata.infix = b;
 					}
 
 
@@ -1311,9 +1310,9 @@ void BoardView::ShowInfoPane(void) {
 		ImGui::Indent();
 		ImGui::TextWrapped("Net: %s\nDiode: %s Volts: %s Res: %s\n\n%s"
 				, m_pinSelected->net->name.c_str()
-				, bvmeta.voltage2str( db, sizeof(db), val.d )
-				, bvmeta.voltage2str( vb, sizeof(vb), val.v )
-				, bvmeta.resistance2str( rb, sizeof(rb), val.r )
+				, obdata.voltage2str( db, sizeof(db), val.d )
+				, obdata.voltage2str( vb, sizeof(vb), val.v )
+				, obdata.resistance2str( rb, sizeof(rb), val.r )
 				, m_pinSelected->net->values.note.c_str()
 				);
 		ImGui::Unindent();
@@ -1442,15 +1441,15 @@ void BoardView::ShowInfoPane(void) {
 									 * conversion about 300 lines back
 									 *
 									 */
-									bvmeta.meta2string(bvmeta_s{ "",pin->net->values.d, pin->net->values.v, pin->net->values.r,"" });
+									obdata.meta2string(obdata_s{ "",pin->net->values.d, pin->net->values.v, pin->net->values.r,"" });
 									ImGui::NextColumn(); ImGui::SetColumnWidth(-1,ref_text_size.x);
-									ImGui::Text("%s", bvmeta.ds);
+									ImGui::Text("%s", obdata.ds);
 
 									ImGui::NextColumn(); ImGui::SetColumnWidth(-1,ref_text_size.x); 
-									ImGui::Text("%s", bvmeta.vs);
+									ImGui::Text("%s", obdata.vs);
 
 									ImGui::NextColumn(); ImGui::SetColumnWidth(-1,ref_text_size.x); 
-									ImGui::Text("%s", bvmeta.rs);
+									ImGui::Text("%s", obdata.rs);
 
 				}
 
@@ -4031,9 +4030,9 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 					auto val = currentlyHoveredPin->net->values;
 					char db[20], vb[20], rb[20];
 					ImGui::TextWrapped("\n%s /  %s  / %s\n%s"
-							, bvmeta.voltage2str( db, sizeof(db), val.d )
-							, bvmeta.voltage2str( vb, sizeof(vb), val.v )
-							, bvmeta.resistance2str( rb, sizeof(rb), val.r )
+							, obdata.voltage2str( db, sizeof(db), val.d )
+							, obdata.voltage2str( vb, sizeof(vb), val.v )
+							, obdata.resistance2str( rb, sizeof(rb), val.r )
 							, currentlyHoveredPin->net->values.note.c_str()
 							);
 				}

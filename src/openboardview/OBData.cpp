@@ -5,16 +5,16 @@
 #include <vector>
 #include <cfloat>
 
-#include "BV-meta.h"
+#include "OBData.h"
 
 #define FL __FILE__,__LINE__
-void BVMeta::v2s( double v, char *s, size_t bs, char *format ) {
+void OBData::v2s( double v, char *s, size_t bs, char *format ) {
 	if (v == DBL_MAX) snprintf(s, bs, "NA");
 	else if (v == DBL_MIN) snprintf(s, bs, "OL");
 	else snprintf(s, bs, format, v);
 }
 
-double BVMeta::voltage2double( char *r, char **ep ) {
+double OBData::voltage2double( char *r, char **ep ) {
 	double result = DBL_MAX;
 	char *multiplier_pos = NULL;
 	char *p = r;
@@ -31,7 +31,7 @@ double BVMeta::voltage2double( char *r, char **ep ) {
 	return result;
 }
 
-double BVMeta::resistance2double( char *r, char **ep ) {
+double OBData::resistance2double( char *r, char **ep ) {
 	double multiplier = 1.0;
 	double result = DBL_MAX;
 	char *multiplier_pos = NULL;
@@ -89,7 +89,7 @@ double BVMeta::resistance2double( char *r, char **ep ) {
 	return DBL_MAX;
 }
 
-char *BVMeta::resistance2str( char *buf, size_t s, double r ) {
+char *OBData::resistance2str( char *buf, size_t s, double r ) {
 	char mc[]="r";
 
 	if ( r == DBL_MAX ) {
@@ -117,7 +117,7 @@ char *BVMeta::resistance2str( char *buf, size_t s, double r ) {
 	return buf;
 }
 
-char *BVMeta::voltage2str( char *buf, size_t s, double v) {
+char *OBData::voltage2str( char *buf, size_t s, double v) {
 
 		if ( v == DBL_MAX ) {
 		snprintf(buf, s, "NA");
@@ -137,7 +137,7 @@ char *BVMeta::voltage2str( char *buf, size_t s, double v) {
 	return buf;
 }
 
-std::string BVMeta::resistance2str( double r ) {
+std::string OBData::resistance2str( double r ) {
 	char mc[]="r";
 	char buf[20];
 
@@ -156,7 +156,7 @@ std::string BVMeta::resistance2str( double r ) {
 	return (std::string)buf;
 }
 
-std::string BVMeta::voltage2str( double v ) {
+std::string OBData::voltage2str( double v ) {
 	char buf[20];
 	snprintf(buf,sizeof(buf),"%0.2f", v );
 	if (infix) {
@@ -167,16 +167,16 @@ std::string BVMeta::voltage2str( double v ) {
 
 }
 
-void BVMeta::meta2string( struct bvmeta_s m ) {
+void OBData::meta2string( struct obdata_s m ) {
 	/*
-	 * This will convert the values in bvmeta_s to
+	 * This will convert the values in obdata_s to
 	 * string versions that are then held in the objs
 	 * fields.
 	 *
 	 * Clearly this isn't thread-safe but it works
 	 * fine for the tasks it's being used for currently
 	 *
-	 * Other option is to have bvmeta_s have its own
+	 * Other option is to have obdata_s have its own
 	 * string storage but that has the memory impact.
 	 *
 	 */
@@ -185,7 +185,7 @@ void BVMeta::meta2string( struct bvmeta_s m ) {
 	resistance2str( rs, sizeof(rs), m.resistance );
 }
 
-void BVMeta::load( std::string filename, std::string boardcode ) {
+void OBData::load( std::string filename, std::string boardcode ) {
 	FILE *f;
 	char line[10240];
 
@@ -214,7 +214,7 @@ void BVMeta::load( std::string filename, std::string boardcode ) {
 
 				if (*p != ' ') continue;
 
-				bvmeta_s b;
+				obdata_s b;
 				char *r = strrchr(line,'\r');
 				char *n = strrchr(line,'\n');
 
