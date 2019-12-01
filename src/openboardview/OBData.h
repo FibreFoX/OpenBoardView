@@ -25,5 +25,5 @@ struct OBData {
 	std::string resistance2str( double r);
 	std::string voltage2str( double v);
 
-	void load( std::string filename, std::string boardcode );
+	void load( std::string filename );//, std::string boardcode );
 };

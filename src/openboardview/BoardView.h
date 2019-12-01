@@ -141,8 +141,7 @@ struct BoardView {
 	 *
 	 */
 	struct OBData obdata;
-	std::string obdata_filename;
-	std::string obdata_boardname;
+	std::string obdata_boardfile;
 	std::string m_current_filename;
 	bool m_board_menu_was_open = false;
 	bool m_showBoardPreferences = false;

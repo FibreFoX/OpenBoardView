@@ -198,9 +198,12 @@ void OBData::meta2string( struct obdata_s m ) {
 	resistance2str( rs, sizeof(rs), m.resistance );
 }
 
-void OBData::load( std::string filename, std::string boardcode ) {
+void OBData::load( std::string filename ) {
 	FILE *f;
 	char line[10240];
+	char id[1024];
+
+	id[0] = '\0';
 
 	f = fopen(filename.c_str(),"r");
 	if (f) {
@@ -208,9 +211,6 @@ void OBData::load( std::string filename, std::string boardcode ) {
 		data.clear();
 
 		while (fgets(line, sizeof(line), f)) {
-
-			//fprintf(stdout,"%s:%d: Parsing: %s\n", FL, line);
-
 			/*
 			 * white space and # denote comment/discard line
 			 *
@@ -218,33 +218,40 @@ void OBData::load( std::string filename, std::string boardcode ) {
 			if (*line == '#') continue;
 			if (*line == ' ') continue;
 
+			char *r = strrchr(line,'\r');
+			char *n = strrchr(line,'\n');
+			if (r) *r = '\0';
+			if (n) *n = '\0';
+
+			if (id[0] == '\0') {
+				//
+				// need to acuire the ID before anything else
+				// 
+				if (strncmp(line, "ID ", 3)==0) {
+					snprintf(id, sizeof(id), "%s", line +3);
+					//fprintf(stdout,"%s:%d: ID Set to %s\n", FL, id);
+					continue;
+				}
+			}
+
+
+			//fprintf(stdout,"%s:%d: Parsing: %s\n", FL, line);
+
+
 			/*
-			 * If the line contains our board code at the start, then we're good to go
+			 * If we've acquired our ID, now we can process the data
 			 *
 			 */
-			if (strstr(line, boardcode.c_str()) == line) {
-				char *p = line +boardcode.size();
+			if (1) {
+				char *p = line;
 
-				if (*p != ' ') continue;
+	//			if (*p != ' ') continue;
 
 				obdata_s b;
-				char *r = strrchr(line,'\r');
-				char *n = strrchr(line,'\n');
-
-				if (r) *r = '\0';
-				if (n) *n = '\0';
 
 				b.diode = b.volts = b.resistance = DBL_MAX;
 
-				/*
-				 * First char after the board code SHOULD be a space, if not, move on.
-				 *
-				 */
-				if (*p != ' ') {
-					continue;
-
-				} else if (*p == ' ') {
-					p++;
+				if (1) {
 					char *ep = strchr(p,' ');
 					if (ep) {
 						*ep = '\0';
