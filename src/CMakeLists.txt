@@ -73,6 +73,7 @@ elseif(WIN32 AND NOT MINGW)
 		set(SDL2_LIBRARY_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/SDL2/lib/x86")
 	endif()
 else()
+	set(SDL2_STATIC_LIBRARIES "SDL2-static" "SDL2") # for statically linking SDL2 for Windows
 	pkg_check_modules(SDL2 REQUIRED sdl2)
 endif()
 add_definitions(-DENABLE_SDL2)
