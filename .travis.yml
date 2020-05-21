@@ -29,6 +29,7 @@ matrix:
       DEPLOY: yes
     addons:
       homebrew:
+        update: true
         packages:
         - sdl2
   - os: linux
