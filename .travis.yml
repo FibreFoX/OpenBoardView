@@ -48,6 +48,7 @@ matrix:
         - g++
         - libsdl2-dev
         - zlib1g-dev
+        - libsqlite3-dev
         - mingw-w64
 language: cpp
 script: |-
