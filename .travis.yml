@@ -47,6 +47,7 @@ matrix:
         - gcc
         - g++
         - libsdl2-dev
+        - zlib1g-dev
         - mingw-w64
 language: cpp
 script: |-
