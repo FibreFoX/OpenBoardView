@@ -27,6 +27,10 @@ matrix:
     env:
       VERS: macos
       DEPLOY: yes
+    addons:
+      homebrew:
+        packages:
+        - sdl2
   - os: linux
     dist: xenial
     compiler: gcc
@@ -46,21 +50,6 @@ matrix:
         - mingw32-runtime
         - libsdl2-dev
 language: cpp
-install: |-
-  if [ "$VERS" == "win" ] # Cross compiling for Windows
-  then
-    exit 0
-  elif [ "$VERS" == "linux" ]
-  then
-    exit 0
-  elif [ "$VERS" == "macos" ]
-  then
-    brew update
-    brew install sdl2
-  else
-    echo "NO DISTRO MATCH. EXITING"
-    exit 1
-  fi
 script: |-
   if [ "$CXX" = "g++" ]
   then
