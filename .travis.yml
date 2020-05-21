@@ -13,8 +13,8 @@ matrix:
         sources:
         - ubuntu-toolchain-r-test
         packages:
-        - gcc-6
-        - g++-6
+        - gcc
+        - g++
         - libsdl2-dev
         - libgtk-3-dev
         - rpm
@@ -43,18 +43,12 @@ matrix:
         sources:
         - ubuntu-toolchain-r-test
         packages:
-        - gcc-6
-        - g++-6
-        - gcc-mingw-w64-i686
-        - g++-mingw-w64-i686
-        - mingw32-runtime
+        - gcc
+        - g++
         - libsdl2-dev
+        - mingw-w64
 language: cpp
 script: |-
-  if [ "$CXX" = "g++" ]
-  then
-    export CXX="g++-6" CC="gcc-6"
-  fi
   ./build.sh || exit 1
   if [ "$DEPLOY_DEB" == "yes" ] || [ "$DEPLOY_RPM" == "yes" ]
   then
