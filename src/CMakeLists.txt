@@ -74,6 +74,9 @@ elseif(WIN32 AND NOT MINGW)
 	endif()
 else()
 	pkg_check_modules(SDL2 REQUIRED sdl2)
+
+	# required by /usr/include/SDL2/SDL_syswm.h
+	find_package(X11 REQUIRED)
 endif()
 add_definitions(-DENABLE_SDL2)
 
