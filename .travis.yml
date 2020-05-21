@@ -1,45 +1,58 @@
 git:
   depth: 9999999
-os:
-- linux
-compiler:
-- clang
 matrix:
   include:
   - os: linux
+    dist: xenial
     compiler: gcc
-    env: VERS=linux DEPLOY=yes
+    env:
+      VERS: linux
+      DEPLOY: yes
+    addons:
+      apt:
+        sources:
+        - ubuntu-toolchain-r-test
+        packages:
+        - gcc-6
+        - g++-6
+        - libsdl2-dev
+        - libgtk-3-dev
+        - rpm
+        - libegl1-mesa-dev
+        - libgles2-mesa-dev
+        # Manual installation of the last 2 shouldn't be required, but it is now…
   - os: osx
     osx_image: xcode9.4
     compiler: clang
-    env: VERS=macos DEPLOY=yes
-  - os: linux 
+    env:
+      VERS: macos
+      DEPLOY: yes
+  - os: linux
+    dist: xenial
     compiler: gcc
-    env: VERS=win CROSS=mingw64 DEPLOY=yes
-dist: trusty
-sudo: required
+    env:
+      VERS: win
+      DEPLOY: yes
+      CROSS: mingw64
+    addons:
+      apt:
+        sources:
+        - ubuntu-toolchain-r-test
+        packages:
+        - gcc-6
+        - g++-6
+        - gcc-mingw-w64-i686
+        - g++-mingw-w64-i686
+        - mingw32-runtime
+        - libsdl2-dev
 language: cpp
-addons:
-  apt:
-    sources:
-    - ubuntu-toolchain-r-test
-    packages:
-    - gcc-6
-    - g++-6
 install: |-
   if [ "$VERS" == "win" ] # Cross compiling for Windows
   then
-    sudo add-apt-repository "deb http://fr.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse" # We need an up-to-date MinGW
-    sudo apt-get update
-    sudo apt-get install -t xenial gcc-mingw-w64-i686 g++-mingw-w64-i686 mingw32-runtime
-    wget https://www.libsdl.org/release/SDL2-devel-2.0.4-mingw.tar.gz # Manually install the SDL2 mingw dev files
-    tar -xf SDL2-devel-2.0.4-mingw.tar.gz
-    pushd SDL2-2.0.4
-    sudo make cross CROSS_PATH=/usr
-    popd
+    exit 0
   elif [ "$VERS" == "linux" ]
   then
-    sudo apt-get -qy install libsdl2-dev libgtk-3-dev rpm libegl1-mesa-dev libgles2-mesa-dev # Manual installation of the last 2 shouldn't be required, but it is now…
+    exit 0
   elif [ "$VERS" == "macos" ]
   then
     brew update
