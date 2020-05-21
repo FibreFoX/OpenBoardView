@@ -77,6 +77,7 @@ else()
 
 	# required by /usr/include/SDL2/SDL_syswm.h
 	find_package(X11 REQUIRED)
+	set(GCC_CXX_FLAGS "${GCC_CXX_FLAGS} -lX11")
 endif()
 add_definitions(-DENABLE_SDL2)
 
