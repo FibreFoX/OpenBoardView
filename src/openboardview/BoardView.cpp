@@ -11,11 +11,7 @@
 #include <memory>
 #include <stdio.h>
 #ifdef ENABLE_SDL2
-#ifdef _MSC_VER
 #include <SDL.h>
-#else
-#include <SDL2/SDL.h>
-#endif
 #endif
 
 #include "BRDBoard.h"
@@ -1388,7 +1384,7 @@ void BoardView::ShowInfoPane(void) {
 					ImGui::Columns(4);
 					ImGui::SetColumnWidth(-1, cw);
 
-				} else { 
+				} else {
 					ImGui::Columns(1);
 				}
 
@@ -1413,7 +1409,7 @@ void BoardView::ShowInfoPane(void) {
 				}
 
 				if (pin->net->values.state & NET_VALUES_STATE_PRESENT) {
-					/* 
+					/*
 					 *
 					 * NETVALUES
 					 * NETVALUES
@@ -1427,10 +1423,10 @@ void BoardView::ShowInfoPane(void) {
 					ImGui::NextColumn(); ImGui::SetColumnWidth(-1,ref_text_size.x);
 					ImGui::Text("%s", obdata.ds);
 
-					ImGui::NextColumn(); ImGui::SetColumnWidth(-1,ref_text_size.x); 
+					ImGui::NextColumn(); ImGui::SetColumnWidth(-1,ref_text_size.x);
 					ImGui::Text("%s", obdata.vs);
 
-					ImGui::NextColumn(); ImGui::SetColumnWidth(-1,ref_text_size.x); 
+					ImGui::NextColumn(); ImGui::SetColumnWidth(-1,ref_text_size.x);
 					ImGui::Text("%s", obdata.rs);
 
 				}
@@ -4262,7 +4258,7 @@ void BoardView::HandleInput() {
 				delete m_board;
 
 				// Check board outline (format) point count.
-				//		If we don't have an outline, generate one	
+				//		If we don't have an outline, generate one
 				//
 				if ( file->format.size() < 3 ) {
 					auto pins  = file->pins;
