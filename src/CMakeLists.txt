@@ -1,5 +1,5 @@
 ## COMMON ##
-if(NOT APPLE AND NOT WIN32 OR MINGW)
+if(NOT APPLE AND NOT WIN32)
 	find_package(PkgConfig REQUIRED)
 endif()
 
