@@ -1,5 +1,5 @@
 ## COMMON ##
-if(NOT APPLE AND NOT WIN32)
+if(NOT APPLE AND NOT WIN32 OR MINGW)
 	find_package(PkgConfig REQUIRED)
 endif()
 
@@ -73,9 +73,7 @@ elseif(WIN32 AND NOT MINGW)
 		set(SDL2_LIBRARY_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/SDL2/lib/x86")
 	endif()
 else()
-	find_package(SDL2 REQUIRED)
-	set(SDL2_INCLUDE_DIRS "${SDL2_INCLUDE_DIR}")
-	set(SDL2_LIBRARIES "${SDL2_LIBRARY}")
+	pkg_check_modules(SDL2 REQUIRED sdl2)
 endif()
 add_definitions(-DENABLE_SDL2)
 
