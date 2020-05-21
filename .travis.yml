@@ -3,7 +3,7 @@ git:
 matrix:
   include:
   - os: linux
-    dist: xenial
+    dist: bionic
     compiler: gcc
     env:
       VERS: linux
@@ -33,7 +33,7 @@ matrix:
         packages:
         - sdl2
   - os: linux
-    dist: xenial
+    dist: bionic
     compiler: gcc
     env:
       VERS: win
